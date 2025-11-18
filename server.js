@@ -12,12 +12,9 @@ function createServer(sendFormDataToDiscord) {
         try {
             const body = req.body || {};
 
+            // Only require Email; accept and forward all other fields as-is
             const required = [
                 "Email",
-                "Discord username or other contact",
-                "Game / Company / Team Name",
-                "Country / Timezone",
-                "Preferred Name",
             ];
 
             const missing = required.filter((k) => !body[k] || String(body[k]).trim() === "");

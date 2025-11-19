@@ -9,18 +9,19 @@ function formatFormMessage(data) {
   const tz = safe(data["What country or timezone are you in?"]);
   const name = safe(data["What is the name you want to be called?"]);
 
-  const lines = [
-    `**Email:**`,
-    `-# ${email}`,
-    `**Discord Username:**`,
-    `-# ${discord}`,
-    `**Game / Company:**`,
-    `-# ${org}`,
-    `**Timezone:**`,
-    `-# ${tz}`,
-    `**Preferred Name:**`,
-    `-# ${name}`,
-  ];
+  const lines = [];
+
+  function pushQA(label, value) {
+    lines.push(`**${label}:**`);
+    const parts = String(value).split("\n");
+    parts.forEach((p) => lines.push(`-# ${p}`));
+  }
+
+  pushQA("Email", email);
+  pushQA("Discord Username", discord);
+  pushQA("Game / Company", org);
+  pushQA("Timezone", tz);
+  pushQA("Preferred Name", name);
 
   const known = new Set([
     "Email",
@@ -33,8 +34,9 @@ function formatFormMessage(data) {
   // Append any extra fields that are not part of the known set
   Object.keys(data).forEach((key) => {
     if (!known.has(key)) {
+      const v = safe(data[key]);
       lines.push(`**${key}:**`);
-      lines.push(`-# ${safe(data[key])}`);
+      String(v).split("\n").forEach((p) => lines.push(`-# ${p}`));
     }
   });
 

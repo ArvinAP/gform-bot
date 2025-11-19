@@ -10,11 +10,16 @@ function formatFormMessage(data) {
   const name = safe(data["What is the name you want to be called?"]);
 
   const lines = [
-    `**Email:** ${email}`,
-    `**Discord Username:** ${discord}`,
-    `**Game / Company:** ${org}`,
-    `**Timezone:** ${tz}`,
-    `**Preferred Name:** ${name}`,
+    `**Email:**`,
+    `-# ${email}`,
+    `**Discord Username:**`,
+    `-# ${discord}`,
+    `**Game / Company:**`,
+    `-# ${org}`,
+    `**Timezone:**`,
+    `-# ${tz}`,
+    `**Preferred Name:**`,
+    `-# ${name}`,
   ];
 
   const known = new Set([
@@ -28,12 +33,13 @@ function formatFormMessage(data) {
   // Append any extra fields that are not part of the known set
   Object.keys(data).forEach((key) => {
     if (!known.has(key)) {
-      lines.push(`**${key}:** ${safe(data[key])}`);
+      lines.push(`**${key}:**`);
+      lines.push(`-# ${safe(data[key])}`);
     }
   });
 
-  // Render all lines as subtext (blockquote) with no extra blank lines
-  return lines.map(l => `-# ${l}`).join("\n");
+  // Render with no extra blank lines
+  return lines.join("\n");
 }
 
 module.exports = { formatFormMessage };

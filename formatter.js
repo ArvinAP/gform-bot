@@ -10,7 +10,6 @@ function formatFormMessage(data) {
   const name = safe(data["What is the name you want to be called?"]);
 
   const lines = [
-    "📌 **New Form Submission**",
     `**Email:** ${email}`,
     `**Discord Username:** ${discord}`,
     `**Game / Company:** ${org}`,
@@ -33,7 +32,8 @@ function formatFormMessage(data) {
     }
   });
 
-  return lines.join("\n\n");
+  // Render all lines as subtext (blockquote) with no extra blank lines
+  return lines.map(l => `-# ${l}`).join("\n");
 }
 
 module.exports = { formatFormMessage };

@@ -33,7 +33,7 @@ function formatFormMessage(data) {
     }
   });
 
-  return lines.join("\n");
+  return lines.join("\n\n");
 }
 
 module.exports = { formatFormMessage };

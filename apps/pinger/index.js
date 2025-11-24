@@ -9,10 +9,29 @@
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
+function withCacheBuster(url) {
+  try {
+    const u = new URL(url);
+    u.searchParams.set('_', String(Date.now()));
+    return u.toString();
+  } catch {
+    // If URL parsing fails, fall back to appending a query string
+    const sep = url.includes('?') ? '&' : '?';
+    return `${url}${sep}_=${Date.now()}`;
+  }
+}
+
 async function ping(url) {
   const start = Date.now();
   try {
-    const res = await fetch(url, { method: 'GET' });
+    const res = await fetch(withCacheBuster(url), {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-cache, no-store, max-age=0',
+        'Pragma': 'no-cache',
+        'User-Agent': 'render-pinger/1.0'
+      }
+    });
     const ok = res.ok;
     const ms = Date.now() - start;
     console.log(`[pinger] ${ok ? '200' : res.status} ${url} ${ms}ms`);

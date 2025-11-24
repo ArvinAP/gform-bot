@@ -11,7 +11,7 @@ jobs:
     env:
       # Space-separated list of health URLs to ping
       HEALTH_URLS: |
-        https://YOUR-BOT-ONE.onrender.com/health https://YOUR-BOT-TWO.onrender.com/health
+        https://gform-bot.onrender.com/health https://client-bot-hl6s.onrender.com/health
     steps:
       - name: Print schedule time
         run: echo "Run at $(date -u) UTC"

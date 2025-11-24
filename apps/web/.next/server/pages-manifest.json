@@ -3,6 +3,5 @@
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
-  "/calendar": "pages/calendar.js",
-  "/templates": "pages/templates.js"
+  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js"
 }

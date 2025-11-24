@@ -1,5 +1,5 @@
 require("dotenv" ).config();
-const { Client, GatewayIntentBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { Client, GatewayIntentBits, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const chrono = require('chrono-node');
 const { formatFormMessage } = require("./formatter");
 const { getDb } = require("../../packages/firebase");
@@ -64,7 +64,7 @@ async function startWizard(inter, preset = {}) {
   }
 
   sendStepPrompt(inter.channel, inter.user, key);
-  inter.followUp({ content: 'Wizard started. I will ask for details in this channel.', ephemeral: true });
+  inter.followUp({ content: 'Wizard started. I will ask for details in this channel.', flags: MessageFlags.Ephemeral });
 }
 
 function buildNavRow() {
@@ -88,10 +88,10 @@ client.on('interactionCreate', async (interaction) => {
     const id = interaction.customId;
     const key = `${interaction.guildId}:${interaction.channelId}:${interaction.user.id}`;
     const session = sessions.get(key);
-    if (!session) return interaction.reply({ content: 'No active wizard.', ephemeral: true });
+    if (!session) return interaction.reply({ content: 'No active wizard.', flags: MessageFlags.Ephemeral });
     if (id==='wiz_cancel') {
       sessions.delete(key);
-      return interaction.reply({ content: 'Wizard cancelled.', ephemeral: true });
+      return interaction.reply({ content: 'Wizard cancelled.', flags: MessageFlags.Ephemeral });
     }
     if (id==='wiz_back') {
       session.step = Math.max(0, session.step-1);
@@ -231,7 +231,7 @@ client.on('interactionCreate', async (interaction) => {
     if (!interaction.isModalSubmit()) return;
     if (interaction.customId !== 'eventCreateModal') return;
     const db = getDb();
-    if (!db) return interaction.reply({ content: 'DB unavailable', ephemeral: true });
+    if (!db) return interaction.reply({ content: 'DB unavailable', flags: MessageFlags.Ephemeral });
     const title = interaction.fields.getTextInputValue('title');
     const startsAt = interaction.fields.getTextInputValue('startsat');
     const description = interaction.fields.getTextInputValue('description') || '';
@@ -245,10 +245,10 @@ client.on('interactionCreate', async (interaction) => {
     const doc = { title, description, startsAt, endsAt: null, timeZone, guildId: interaction.guildId, channelId: interaction.channelId, mentionHere: false, remindOffsetMinutes: (off!==null&&!isNaN(off)?off:null), remindAt, notifiedAt: null, createdAt: nowIso, updatedAt: nowIso };
     const ref = await db.collection('events').add(doc);
     const descLine = description ? `\n${safeText(description)}` : '';
-    return interaction.reply({ content: `Event created — ${safeText(title)} @ ${startsAt}${descLine}`, ephemeral: true });
+    return interaction.reply({ content: `Event created — ${safeText(title)} @ ${startsAt}${descLine}`, flags: MessageFlags.Ephemeral });
   } catch (e) {
     console.warn('[modal] handler error:', e.message);
-    try { await interaction.reply({ content: 'Failed to create event', ephemeral: true }); } catch {}
+    try { await interaction.reply({ content: 'Failed to create event', flags: MessageFlags.Ephemeral }); } catch {}
   }
 });
 
@@ -329,10 +329,10 @@ client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
     const name = interaction.commandName;
     const db = getDb();
-    if (!db) return interaction.reply({ content: 'DB unavailable', ephemeral: true });
+    if (!db) return interaction.reply({ content: 'DB unavailable', flags: MessageFlags.Ephemeral });
 
     if (name === 'event-create') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const tpl = interaction.options.getString('template');
       const preset = tpl ? { type: tpl } : {};
       await startWizard(interaction, preset);
@@ -349,26 +349,26 @@ client.on('interactionCreate', async (interaction) => {
         .orderBy('startsAt', 'asc')
         .limit(10)
         .get();
-      if (snap.empty) return interaction.reply({ content: 'No upcoming events', ephemeral: true });
+      if (snap.empty) return interaction.reply({ content: 'No upcoming events', flags: MessageFlags.Ephemeral });
       const lines = [];
       snap.forEach((d) => {
         const e = d.data();
         lines.push(`• ${safeText(e.title)} @ ${e.startsAt}`);
       });
-      return interaction.reply({ content: lines.join('\n'), ephemeral: true, allowedMentions: { parse: [] } });
+      return interaction.reply({ content: lines.join('\n'), flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }
 
     if (name === 'event-delete') {
       const id = interaction.options.getString('id', true);
       await db.collection('events').doc(id).delete();
-      return interaction.reply({ content: `Deleted ${id}`, ephemeral: true });
+      return interaction.reply({ content: `Deleted ${id}`, flags: MessageFlags.Ephemeral });
     }
 
     if (name === 'event-remind') {
       const id = interaction.options.getString('id', true);
       const mentionHere = interaction.options.getBoolean('mentionhere') || false;
       const ref = await db.collection('events').doc(id).get();
-      if (!ref.exists) return interaction.reply({ content: 'Event not found', ephemeral: true });
+      if (!ref.exists) return interaction.reply({ content: 'Event not found', flags: MessageFlags.Ephemeral });
       const ev = ref.data() || {};
       const start = ev.startsAt ? new Date(ev.startsAt) : null;
       const ts = start ? Math.floor(start.getTime() / 1000) : null;
@@ -376,7 +376,7 @@ client.on('interactionCreate', async (interaction) => {
       const descLine = ev.description ? `\n${safeText(ev.description)}` : '';
       await sendPlainToDiscord(`${prefix}Reminder: **${safeText(ev.title || 'Event')}** at ${ts?`<t:${ts}:f>`:'unknown time'}${descLine}`, ev.channelId || interaction.channelId);
       await db.collection('events').doc(id).set({ notifiedAt: new Date().toISOString() }, { merge: true });
-      return interaction.reply({ content: 'Reminder sent', ephemeral: true });
+      return interaction.reply({ content: 'Reminder sent', flags: MessageFlags.Ephemeral });
     }
 
     if (name === 'template-create') {
@@ -397,12 +397,12 @@ client.on('interactionCreate', async (interaction) => {
         updatedAt: now,
       };
       const ref = await db.collection('event_templates').add(doc);
-      return interaction.reply({ content: `Template created: ${safeText(doc.name)} (id hidden)`, ephemeral: true });
+      return interaction.reply({ content: `Template created: ${safeText(doc.name)} (id hidden)`, flags: MessageFlags.Ephemeral });
     }
 
     if (name === 'template-list') {
       const snap = await db.collection('event_templates').orderBy('name', 'asc').limit(20).get();
-      if (snap.empty) return interaction.reply({ content: 'No templates', ephemeral: true });
+      if (snap.empty) return interaction.reply({ content: 'No templates', flags: MessageFlags.Ephemeral });
       const lines = [];
       snap.forEach((d) => {
         const t = d.data() || {};
@@ -412,34 +412,34 @@ client.on('interactionCreate', async (interaction) => {
         if (t.mentionHere) parts.push('@here');
         lines.push(`• ${safeText(t.name)}${parts.length ? ' — ' + parts.join(', ') : ''}`);
       });
-      return interaction.reply({ content: lines.join('\n'), ephemeral: true, allowedMentions: { parse: [] } });
+      return interaction.reply({ content: lines.join('\n'), flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }
 
     if (name === 'template-delete') {
       const id = interaction.options.getString('id', true);
       await db.collection('event_templates').doc(id).delete();
-      return interaction.reply({ content: `Template deleted`, ephemeral: true });
+      return interaction.reply({ content: `Template deleted`, flags: MessageFlags.Ephemeral });
     }
 
     if (name === 'set-channel') {
       const ch = interaction.options.getChannel('channel', true);
-      if (!ch || !('send' in ch)) return interaction.reply({ content: 'Please select a text channel.', ephemeral: true });
+      if (!ch || !('send' in ch)) return interaction.reply({ content: 'Please select a text channel.', flags: MessageFlags.Ephemeral });
       await db.collection('guild_settings').doc(interaction.guildId).set({ defaultChannelId: ch.id, updatedAt: new Date().toISOString() }, { merge: true });
-      return interaction.reply({ content: `Default channel set to <#${ch.id}>`, ephemeral: true, allowedMentions: { parse: [] } });
+      return interaction.reply({ content: `Default channel set to <#${ch.id}>`, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }
     if (name === 'get-channel') {
       const doc = await db.collection('guild_settings').doc(interaction.guildId).get();
       const id = doc.exists ? (doc.data().defaultChannelId || null) : null;
-      return interaction.reply({ content: id ? `Default channel: <#${id}>` : 'No default channel set.', ephemeral: true, allowedMentions: { parse: [] } });
+      return interaction.reply({ content: id ? `Default channel: <#${id}>` : 'No default channel set.', flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }
     if (name === 'clear-channel') {
       await db.collection('guild_settings').doc(interaction.guildId).set({ defaultChannelId: null, updatedAt: new Date().toISOString() }, { merge: true });
-      return interaction.reply({ content: 'Default channel cleared.', ephemeral: true });
+      return interaction.reply({ content: 'Default channel cleared.', flags: MessageFlags.Ephemeral });
     }
   } catch (e) {
     console.warn('[commands] handler error:', e.message);
     if (interaction.isRepliable()) {
-      try { await interaction.reply({ content: 'Command failed', ephemeral: true }); } catch {}
+      try { await interaction.reply({ content: 'Command failed', flags: MessageFlags.Ephemeral }); } catch {}
     }
   }
 });

@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState, Fragment } from 'react';
 import NavBar from '../components/NavBar';
+import { useTenant } from '../lib/tenant';
 import Head from 'next/head';
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 
 export default function CalendarPage() {
+  const { apiBase: base } = useTenant();
   const [items, setItems] = useState([]);
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,8 +28,6 @@ export default function CalendarPage() {
       mentionHere: prev.mentionHere || !!t.mentionHere,
     }));
   }
-
-  const base = process.env.NEXT_PUBLIC_API_URL;
 
   async function fetchEvents() {
     try {

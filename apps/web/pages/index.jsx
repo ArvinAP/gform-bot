@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState, Fragment } from 'react';
 import NavBar from '../components/NavBar';
+import { useTenant } from '../lib/tenant';
 
 export default function Home() {
-  const base = process.env.NEXT_PUBLIC_API_URL;
+  const { apiBase: base } = useTenant();
   const [events, setEvents] = useState([]);
   const [subs, setSubs] = useState([]);
   const [loading, setLoading] = useState(true);

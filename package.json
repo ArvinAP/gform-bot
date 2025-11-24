@@ -1,19 +1,16 @@
 {
   "name": "discord-client-manager",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node index.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "dependencies": {
-    "discord.js": "^14.24.2",
-    "dotenv": "^17.2.3",
-    "express": "^5.1.0"
+    "test": "echo \"No tests at root\"",
+    "install:all": "npm install",
+    "dev:bot": "npm run -w apps/bot start",
+    "dev:web": "npm run -w apps/web dev",
+    "build:web": "npm run -w apps/web build"
   }
 }

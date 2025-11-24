@@ -1,6 +1,9 @@
 # env and secrets
 .env
 .env.*.local
+**/.env
+**/.env.local
+**/.env..local
 
 # dependencies
 node_modules/
@@ -21,3 +24,6 @@ Thumbs.db
 # runtime/build
 dist/
 coverage/
+
+*.service-account.json
+firebase-*.json

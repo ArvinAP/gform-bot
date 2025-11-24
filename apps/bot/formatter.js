@@ -3,12 +3,6 @@ function safe(v) {
 }
 
 function formatFormMessage(data) {
-  const email = safe(data["Email"]);
-  const discord = safe(data["Discord username or other contact"]);
-  const org = safe(data["What is the name of your game and company/team name "]);
-  const tz = safe(data["What country or timezone are you in?"]);
-  const name = safe(data["What is the name you want to be called?"]);
-
   const lines = [];
 
   function pushQA(label, value) {
@@ -17,27 +11,35 @@ function formatFormMessage(data) {
     parts.forEach((p) => lines.push(`-# ${p}`));
   }
 
-  pushQA("Email", email);
-  pushQA("Discord Username", discord);
-  pushQA("Game / Company", org);
-  pushQA("Timezone", tz);
-  pushQA("Preferred Name", name);
+  const keys = Object.keys(data || {}).filter((k) => k !== "_meta");
+  keys.sort((a, b) => {
+    if (a === "Email") return -1;
+    if (b === "Email") return 1;
+    return a.localeCompare(b);
+  });
 
-  const known = new Set([
-    "Email",
-    "Discord username or other contact",
-    "What is the name of your game and company/team name ",
-    "What country or timezone are you in?",
-    "What is the name you want to be called?",
-  ]);
-
-  // Append any extra fields that are not part of the known set
-  Object.keys(data).forEach((key) => {
-    if (!known.has(key)) {
-      const v = safe(data[key]);
-      lines.push(`**${key}:**`);
-      String(v).split("\n").forEach((p) => lines.push(`-# ${p}`));
+  keys.forEach((key) => {
+    const raw = data[key];
+    let val;
+    if (raw == null || (typeof raw === "string" && raw.trim() === "")) {
+      val = "N/A";
+    } else if (Array.isArray(raw)) {
+      val = raw.join(", ");
+    } else if (typeof raw === "object") {
+      try {
+        const parts = [];
+        Object.keys(raw).forEach((k) => {
+          const rv = Array.isArray(raw[k]) ? raw[k].join(", ") : String(raw[k]);
+          parts.push(`${k}: ${rv}`);
+        });
+        val = parts.length ? parts.join("\n") : JSON.stringify(raw);
+      } catch (_) {
+        try { val = JSON.stringify(raw); } catch { val = String(raw); }
+      }
+    } else {
+      val = String(raw);
     }
+    pushQA(key, safe(val));
   });
 
   // Render with no extra blank lines

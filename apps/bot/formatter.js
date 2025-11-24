@@ -4,6 +4,10 @@ function safe(v) {
 
 function formatFormMessage(data) {
   const lines = [];
+  const formTitle = (data && data._meta && data._meta.formTitle) ? String(data._meta.formTitle) : "";
+  if (formTitle) {
+    lines.push(`Form: ${safe(formTitle)}`);
+  }
 
   function pushQA(label, value) {
     lines.push(`**${label}:**`);

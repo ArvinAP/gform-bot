@@ -12,14 +12,12 @@ function createServer(sendFormDataToDiscord) {
         try {
             const body = req.body || {};
 
-            // Only require Email; accept and forward all other fields as-is
-            const required = [
-                "Email",
-            ];
-
-            const missing = required.filter((k) => !body[k] || String(body[k]).trim() === "");
-            if (missing.length) {
-                return res.status(400).json({ success: false, error: `Missing fields: ${missing.join(", ")}` });
+            // Normalize email from common variants; default to "Unknown" if absent
+            const emailVal = body["Email"] || body["Email address"] || body["email"] || body["email address"] || body["EmailAddress"] || body["emailAddress"] || null;
+            if (!emailVal || String(emailVal).trim() === "") {
+                body["Email"] = "Unknown";
+            } else {
+                body["Email"] = String(emailVal);
             }
 
             await sendFormDataToDiscord(body);

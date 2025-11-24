@@ -6,7 +6,7 @@ function formatFormMessage(data) {
   const lines = [];
   const formTitle = (data && data._meta && data._meta.formTitle) ? String(data._meta.formTitle) : "";
   if (formTitle) {
-    lines.push(`Form: ${safe(formTitle)}`);
+    lines.push(`**Form:** ${safe(formTitle)}`);
   }
 
   function pushQA(label, value) {
@@ -43,7 +43,12 @@ function formatFormMessage(data) {
     } else {
       val = String(raw);
     }
-    pushQA(key, safe(val));
+    const display = safe(val);
+    // Skip fields that are not provided (empty or marked Unknown)
+    if (display === "N/A" || String(display).trim().toLowerCase() === "unknown") {
+      return;
+    }
+    pushQA(key, display);
   });
 
   // Render with no extra blank lines

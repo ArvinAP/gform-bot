@@ -1,0 +1,33 @@
+name: Keep Bot Awake
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"  # every 5 minutes (UTC)
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    env:
+      # Space-separated list of health URLs to ping
+      HEALTH_URLS: |
+        https://YOUR-BOT-ONE.onrender.com/health https://YOUR-BOT-TWO.onrender.com/health
+    steps:
+      - name: Print schedule time
+        run: echo "Run at $(date -u) UTC"
+
+      - name: Ping health endpoints
+        shell: bash
+        run: |
+          set -e
+          IFS=' ' read -r -a URLS <<< "$HEALTH_URLS"
+          if [ ${#URLS[@]} -eq 0 ]; then
+            echo "No HEALTH_URLS configured"; exit 0;
+          fi
+          for u in "${URLS[@]}"; do
+            echo "Pinging $u"
+            # add cache-buster and a 45s timeout
+            TS=$(date +%s%3N)
+            if [[ "$u" == *"?"* ]]; then SEP='&'; else SEP='?'; fi
+            curl -fsS --max-time 45 -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' "$u${SEP}_=$TS" >/dev/null || echo "Ping failed: $u"
+          done
